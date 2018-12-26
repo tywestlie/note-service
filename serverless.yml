@@ -48,3 +48,11 @@ functions:
       - http:
           path: notes
           method: post
+  listNotes:
+    handler: api/note.list
+    memorySize: 128
+    description: List all notes
+    events:
+      - http:
+          path: notes
+          method: get
