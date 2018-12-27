@@ -56,3 +56,11 @@ functions:
       - http:
           path: notes
           method: get
+  listNotesByTag:
+    handler: api/note.tags
+    memorySize: 128
+    description: List notes by tag
+    events:
+      - http:
+          path: notes/{tag}
+          method: get

@@ -18,7 +18,7 @@ module.exports.submit = (event, context, callback) => {
     return;
   }
 
-  submitNoteP(noteInfo(message, tag))
+  submitNote(noteInfo(message, tag))
   .then(res => {
     callback(null, {
       statusCode: 200,
@@ -39,7 +39,7 @@ module.exports.submit = (event, context, callback) => {
   });
 };
 
-const submitNoteP = note => {
+const submitNote = note => {
   console.log('Submitting note');
   const noteInfo = {
     TableName: process.env.NOTE_TABLE,
@@ -83,7 +83,36 @@ module.exports.list = (event, context, callback) => {
         }
 
     };
-
     dynamoDb.scan(params, onScan);
+};
 
+module.exports.tags = (event, context, callback) => {
+  console.log(event)
+  const params = {
+    TableName: process.env.NOTE_TABLE,
+    FilterExpression: '#tag = :tag',
+    ExpressionAttributeNames: {
+      '#tag': 'tag',
+     },
+    ExpressionAttributeValues: {
+      ':tag': event.pathParameters.tag,
+     },
+  };
+
+  const onScan = (err, data) => {
+      if (err) {
+          console.log('Scan failed to load data. Error JSON:', JSON.stringify(err, null, 2));
+          callback(err);
+      } else {
+          console.log("Scan succeeded.");
+          return callback(null, {
+              statusCode: 200,
+              body: JSON.stringify({
+                  notes: data.Items
+              })
+          });
+      }
+
+  };
+  dynamoDb.scan(params, onScan);
 };
