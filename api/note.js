@@ -12,7 +12,7 @@ module.exports.submit = (event, context, callback) => {
   const message = requestBody.message;
   const tag = requestBody.tag;
 
-  if (typeof message !== 'string' || typeof tag !== 'string') {
+  if (( message !== 'string' && message.length < 250) || (tag !== 'Work' || 'Hobby' || 'Personal')) {
     console.error('Validation Failed');
     callback(new Error('Couldn\'t submit message because of validation errors.'));
     return;
@@ -22,6 +22,10 @@ module.exports.submit = (event, context, callback) => {
   .then(res => {
     callback(null, {
       statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
+        "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
+      },
       body: JSON.stringify({
         message: `Sucessfully submitted message with tag: ${tag}`,
         noteId: res.id
@@ -76,6 +80,10 @@ module.exports.list = (event, context, callback) => {
             console.log("Scan succeeded.");
             return callback(null, {
                 statusCode: 200,
+                headers: {
+                  "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
+                  "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
+                },
                 body: JSON.stringify({
                     notes: data.Items
                 })
@@ -87,7 +95,6 @@ module.exports.list = (event, context, callback) => {
 };
 
 module.exports.tags = (event, context, callback) => {
-  console.log(event)
   const params = {
     TableName: process.env.NOTE_TABLE,
     FilterExpression: '#tag = :tag',
@@ -107,12 +114,43 @@ module.exports.tags = (event, context, callback) => {
           console.log("Scan succeeded.");
           return callback(null, {
               statusCode: 200,
+              headers: {
+                "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
+                "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
+              },
               body: JSON.stringify({
                   notes: data.Items
               })
           });
       }
-
   };
   dynamoDb.scan(params, onScan);
+};
+
+module.exports.deleteNote = (event, context, callback) => {
+  const params = {
+    TableName: process.env.NOTE_TABLE,
+    Key: {
+      id: event.pathParameters.id
+    },
+  };
+
+  const onDelete = (err, data) => {
+      if (err) {
+          console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
+      } else {
+        console.log("DeleteItem succeeded");
+        return callback(null, {
+            statusCode: 200,
+            headers: {
+              "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
+              "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
+            },
+            body: JSON.stringify({
+                notes: "Item Deleted"
+            })
+      });
+    }
+  };
+  dynamoDb.delete(params, onDelete);
 };

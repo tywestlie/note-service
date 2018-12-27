@@ -64,3 +64,10 @@ functions:
       - http:
           path: notes/{tag}
           method: get
+  deleteTag:
+    handler: api/note.deleteNote
+    description: Deletes note by id
+    events:
+      - http:
+          path: note/{id}
+          method: delete
