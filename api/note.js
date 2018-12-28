@@ -8,14 +8,26 @@ AWS.config.setPromisesDependency(require('bluebird'));
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 module.exports.submit = (event, context, callback) => {
-  const requestBody = JSON.parse(event.body);
-  const message = requestBody.message;
-  const tag = requestBody.tag;
+  console.log(`this is the event: ${event}`);
+  console.log(`this is the json parsed event keys: ${Object.keys(event)}`);
+  console.log(`this is the json parsed event values: ${Object.values(event)}`);
+  // console.log(`this is the body: ${event.body}`);
+  // console.log(`this is the context: ${context}`);
+  // console.log(`this is the callback: ${callback}`);
+  // const requestBody = event.body;
+  // console.log(`this is the requestBody ${requestBody}`);
+  const message = event.message;
+  console.log(`this is the message ${message}`);
+  const tag = event.tag;
+  console.log(`this is the tag ${tag}`);
 
-  if (( message !== 'string' && message.length < 250) || (tag !== 'Work' || 'Hobby' || 'Personal')) {
+  if (`${message}`.length > 250) {
     console.error('Validation Failed');
-    callback(new Error('Couldn\'t submit message because of validation errors.'));
-    return;
+    console.log(message);
+    console.log(message.length);
+    console.log(tag);
+    // callback(new Error('Couldn\'t submit message because of validation errors.'));
+    // return;
   }
 
   submitNote(noteInfo(message, tag))
@@ -23,8 +35,8 @@ module.exports.submit = (event, context, callback) => {
     callback(null, {
       statusCode: 200,
       headers: {
-        "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
-        "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
+        "Access-Control-Allow-Origin" : "*",
+        "Access-Control-Allow-Credentials" : true
       },
       body: JSON.stringify({
         message: `Sucessfully submitted message with tag: ${tag}`,
@@ -54,7 +66,8 @@ const submitNote = note => {
 };
 
 const noteInfo = (message, tag) => {
-  const timestamp = new Date().getTime();
+  const timestamp = Date.now();
+  console.log(timestamp);
   return {
     id: uuid.v1(),
     message: message,
@@ -67,7 +80,7 @@ const noteInfo = (message, tag) => {
 module.exports.list = (event, context, callback) => {
     var params = {
         TableName: process.env.NOTE_TABLE,
-        ProjectionExpression: "id, message, tag, updatedAt"
+        ProjectionExpression: "id, message, tag, submittedAt"
     };
 
     console.log("Scanning Notes table.");
