@@ -70,7 +70,7 @@ const noteInfo = (message, tag) => {
 module.exports.list = (event, context, callback) => {
     var params = {
         TableName: process.env.NOTE_TABLE,
-        ProjectionExpression: "id, message, tag, submittedAT"
+        ProjectionExpression: "id, message, tag, submittedAt"
     };
     console.log("Scanning Notes table.");
     const onScan = (err, data) => {
