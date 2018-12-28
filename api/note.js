@@ -8,26 +8,16 @@ AWS.config.setPromisesDependency(require('bluebird'));
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 module.exports.submit = (event, context, callback) => {
-  console.log(`this is the event: ${event}`);
-  console.log(`this is the json parsed event keys: ${Object.keys(event)}`);
-  console.log(`this is the json parsed event values: ${Object.values(event)}`);
-  // console.log(`this is the body: ${event.body}`);
-  // console.log(`this is the context: ${context}`);
-  // console.log(`this is the callback: ${callback}`);
-  // const requestBody = event.body;
-  // console.log(`this is the requestBody ${requestBody}`);
   const message = event.message;
-  console.log(`this is the message ${message}`);
   const tag = event.tag;
-  console.log(`this is the tag ${tag}`);
 
-  if (`${message}`.length > 250) {
+  if (message.length > 250 || message.length === 0) {
     console.error('Validation Failed');
     console.log(message);
     console.log(message.length);
     console.log(tag);
-    // callback(new Error('Couldn\'t submit message because of validation errors.'));
-    // return;
+    callback(new Error('Couldn\'t submit message because of validation errors.'));
+    return;
   }
 
   submitNote(noteInfo(message, tag))
@@ -80,12 +70,10 @@ const noteInfo = (message, tag) => {
 module.exports.list = (event, context, callback) => {
     var params = {
         TableName: process.env.NOTE_TABLE,
-        ProjectionExpression: "id, message, tag, submittedAt"
+        ProjectionExpression: "id, message, tag, submittedAT"
     };
-
     console.log("Scanning Notes table.");
     const onScan = (err, data) => {
-
         if (err) {
             console.log('Scan failed to load data. Error JSON:', JSON.stringify(err, null, 2));
             callback(err);
@@ -94,8 +82,8 @@ module.exports.list = (event, context, callback) => {
             return callback(null, {
                 statusCode: 200,
                 headers: {
-                  "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
-                  "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
+                  "Access-Control-Allow-Origin" : "*",
+                  "Access-Control-Allow-Credentials" : true
                 },
                 body: JSON.stringify({
                     notes: data.Items
@@ -128,8 +116,8 @@ module.exports.tags = (event, context, callback) => {
           return callback(null, {
               statusCode: 200,
               headers: {
-                "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
-                "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
+                "Access-Control-Allow-Origin" : "*",
+                "Access-Control-Allow-Credentials" : true
               },
               body: JSON.stringify({
                   notes: data.Items
@@ -156,8 +144,8 @@ module.exports.deleteNote = (event, context, callback) => {
         return callback(null, {
             statusCode: 200,
             headers: {
-              "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
-              "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
+              "Access-Control-Allow-Origin" : "*",
+              "Access-Control-Allow-Credentials" : true
             },
             body: JSON.stringify({
                 notes: "Item Deleted"
